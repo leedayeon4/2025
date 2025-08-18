@@ -84,4 +84,20 @@ if selected_mbti:
 st.markdown("---")
 st.markdown("📬 문의: [dream@careerland.com](mailto:dream@careerland.com) | 💻 Made with ❤️ by AI")
 st.markdown("🎨 이모지 & 스타일로 더욱 예쁜 진로 추천 사이트 🌈")
+st.markdown("""
+    <style>
+    body {
+        background: linear-gradient(-45deg, #fce4ec, #f8bbd0, #f48fb1, #ec407a);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+    }
+
+    @keyframes gradientBG {
+        0% {background-position: 0% 50%;}
+        50% {background-position: 100% 50%;}
+        100% {background-position: 0% 50%;}
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 
