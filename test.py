@@ -2,74 +2,59 @@ import streamlit as st
 import pandas as pd
 
 # ----------------------------
-# 데이터베이스 (간단 매핑)
+# 1) 데이터베이스 예시
 # ----------------------------
-career_db = {
-    "심리": {
-        "학과": ["심리학과", "상담학과", "아동가족학과"],
-        "직업": ["임상심리사", "상담교사", "HR 전문가"]
-    },
-    "컴퓨터": {
-        "학과": ["컴퓨터공학과", "소프트웨어학과", "데이터사이언스학과"],
-        "직업": ["프로그래머", "데이터분석가", "AI 연구원"]
-    },
-    "예술": {
-        "학과": ["미술학과", "음악학과", "공연예술학과"],
-        "직업": ["화가", "음악가", "연극배우"]
-    },
-    "경제": {
-        "학과": ["경제학과", "경영학과", "국제통상학과"],
-        "직업": ["금융애널리스트", "기업컨설턴트", "무역전문가"]
-    },
-    "생명": {
-        "학과": ["생명과학과", "생명공학과", "의학과"],
-        "직업": ["연구원", "의사", "제약개발자"]
-    },
-    "교육": {
-        "학과": ["교육학과", "유아교육과", "특수교육과"],
-        "직업": ["교사", "교육컨설턴트", "교재개발자"]
-    },
-    "법": {
-        "학과": ["법학과", "경찰행정학과", "국제법학과"],
-        "직업": ["변호사", "판사", "경찰"]
-    }
-}
+content_db = [
+    {"키워드": "패션", "타겟": "10대", "유형": "SNS", "아이디어": "여름 한정 패션 아이템 리뷰", "전략": "AIDA, FOMO"},
+    {"키워드": "패션", "타겟": "20대", "유형": "블로그", "아이디어": "출근룩 스타일 가이드", "전략": "참여 유도, 해시태그 활용"},
+    {"키워드": "IT", "타겟": "20대", "유형": "영상", "아이디어": "신제품 언박싱 영상", "전략": "호기심 자극, 스토리텔링"},
+    {"키워드": "여행", "타겟": "직장인", "유형": "블로그", "아이디어": "주말 근교 여행 추천", "전략": "문제 해결, 정보 제공"},
+    {"키워드": "음식", "타겟": "모든 연령", "유형": "SNS", "아이디어": "레시피 영상 시리즈", "전략": "참여 유도, 교육적 콘텐츠"},
+    {"키워드": "경제", "타겟": "대학생", "유형": "뉴스레터", "아이디어": "재테크 기초 가이드", "전략": "교육적 콘텐츠, 스토리텔링"}
+]
+
+df_content = pd.DataFrame(content_db)
 
 # ----------------------------
-# Streamlit 앱 UI
+# 2) Streamlit UI
 # ----------------------------
-st.set_page_config(page_title="진로 탐색기", page_icon="🎯", layout="wide")
-st.title("🎯 진로 탐색기")
-st.markdown("평소 관심 있는 키워드를 입력하면 관련 학과와 직업을 추천해드려요!")
+st.set_page_config(page_title="콘텐츠 아이디어 추천기", page_icon="💡", layout="wide")
+st.title("💡 콘텐츠 아이디어 추천기")
+st.markdown("관심 키워드, 타겟층, 콘텐츠 유형, 학습 포인트를 선택하면 관련 아이디어와 전략을 추천해드립니다!")
 
 # 사용자 입력
-user_input = st.text_input("관심 분야를 입력하세요 (예: 심리, 컴퓨터, 예술, 경제, 생명, 교육, 법)")
+col1, col2 = st.columns(2)
+with col1:
+    keyword_input = st.text_input("키워드 입력 (예: 패션, IT, 여행, 음식, 경제)")
+with col2:
+    target_input = st.selectbox("타겟층 선택", ["10대", "20대", "대학생", "직장인", "모든 연령"])
 
+content_type_input = st.multiselect("콘텐츠 유형 선택", ["블로그", "SNS", "영상", "뉴스레터"], default=["블로그", "SNS"])
+
+# 검색 버튼
 if st.button("추천받기"):
-    if user_input.strip() == "":
-        st.warning("⚠️ 관심 키워드를 입력해주세요.")
+    if keyword_input.strip() == "":
+        st.warning("⚠️ 키워드를 입력해주세요.")
     else:
-        keyword = None
-        for k in career_db.keys():
-            if k in user_input:
-                keyword = k
-                break
+        # 필터링
+        filtered = df_content[
+            (df_content["키워드"].str.contains(keyword_input, case=False)) &
+            (df_content["타겟"] == target_input) &
+            (df_content["유형"].isin(content_type_input))
+        ]
 
-        if keyword:
-            data = career_db[keyword]
-            st.subheader(f"🔎 '{keyword}' 분야 추천 결과")
-
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown("### 📚 추천 학과")
-                for major in data["학과"]:
-                    st.write("- ", major)
-            with col2:
-                st.markdown("### 💼 추천 직업")
-                for job in data["직업"]:
-                    st.write("- ", job)
-
-            st.success("추천된 학과와 직업을 더 조사해보면서 진로를 탐색해 보세요!")
+        if filtered.empty:
+            st.info("관련 아이디어가 없습니다. 다른 키워드/타겟/유형을 선택해보세요!")
         else:
-            st.info("관련 데이터가 없어요. 더 많은 키워드를 입력해보세요!")
+            st.subheader("추천 콘텐츠 아이디어")
+            for idx, row in filtered.iterrows():
+                st.markdown(f"**아이디어:** {row['아이디어']}")
+                st.markdown(f"- 콘텐츠 유형: {row['유형']}")
+                st.markdown(f"- 전략/학습 포인트: {row['전략']}")
+                st.markdown("---")
 
+            # CSV 다운로드
+            csv = filtered.to_csv(index=False).encode('utf-8-sig')
+            st.download_button(label="추천 아이디어 CSV 다운로드", data=csv, file_name="추천_콘텐츠_아이디어.csv", mime="text/csv")
+
+   
