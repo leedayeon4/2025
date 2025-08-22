@@ -1,3 +1,3 @@
 import streamlit as st 
-st.title('꿍싯냐옹')
+st.title('말랑말랑')
 st.write('hello streamlit!!!')
