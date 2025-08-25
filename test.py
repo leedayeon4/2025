@@ -50,7 +50,7 @@ if st.button("✅ 학습 계획표 생성하기"):
     if photo:
         st.image(photo, caption="열공 모드 ON! ✨", use_column_width=True)
     else:
-        st.info("이미지를 업로드하면 계획표 아래에 표시됩니다.")
+        st.info("https://www.google.com/url?sa=i&url=https%3A%2F%2Fko.ac-illust.com%2Fsearch%2F%25EA%25B3%25B5%25EB%25B6%2580%25ED%2595%2598%25EB%258A%2594%2520%25EC%2595%2584%25EC%259D%25B4&psig=AOvVaw121PAzd_0iNTIPSc-8Yrhe&ust=1756176691587000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCODOuJT6pI8DFQAAAAAdAAAAABAE.")
 
     # 귀여운 테이블 생성
     plan_data = []
