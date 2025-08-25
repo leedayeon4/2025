@@ -1,68 +1,136 @@
-# study_planner.py
-
 import streamlit as st
 import pandas as pd
-from datetime import date, timedelta
 
-# 앱 제목
-st.title("📚 나만의 학습 계획표 만들기")
+# -------------------------------
+# 🎨 Custom CSS (디자인 꾸미기)
+# -------------------------------
+st.markdown("""
+    <style>
+    body {
+        background: linear-gradient(to right, #89f7fe, #66a6ff);
+        font-family: 'Arial', sans-serif;
+    }
+    .title {
+        text-align: center;
+        font-size: 36px;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+    .subtitle {
+        text-align: center;
+        font-size: 20px;
+        color: #34495e;
+        margin-bottom: 30px;
+    }
+    .stButton>button {
+        background-color: #ff7675;
+        color: white;
+        border-radius: 10px;
+        font-size: 16px;
+        padding: 8px 16px;
+    }
+    .stButton>button:hover {
+        background-color: #d63031;
+    }
+    .download-btn {
+        background-color: #6c5ce7;
+        color: white;
+        border-radius: 8px;
+        padding: 6px 12px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# 사이드바에서 설정
-st.sidebar.header("📌 계획 설정")
+# -------------------------------
+# 🎯 제목
+# -------------------------------
+st.markdown('<div class="title">📚 스마트 학습 계획표 생성기</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">나에게 맞는 맞춤형 학습 계획을 세워보세요!</div>', unsafe_allow_html=True)
 
-# 학습 기간 입력
-start_date = st.sidebar.date_input("시작 날짜", date.today())
-end_date = st.sidebar.date_input("종료 날짜", date.today() + timedelta(days=7))
+# -------------------------------
+# 📝 입력값 설정
+# -------------------------------
+st.sidebar.header("📌 입력 옵션")
 
-# 과목 입력
-subjects = st.sidebar.text_area("과목 입력 (줄바꿈으로 구분)", "국어\n수학\n영어\n과학\n사회")
-subject_list = [s.strip() for s in subjects.split("\n") if s.strip()]
+subjects = st.sidebar.multiselect(
+    "과목을 선택하세요:",
+    ["국어", "영어", "수학", "과학", "사회", "제2외국어", "예체능", "자율학습", "독서", "코딩", "기타"]
+)
 
-# 하루 공부 시간
-study_hours = st.sidebar.slider("하루 공부 시간 (시간)", 1, 12, 5)
+days = st.sidebar.multiselect(
+    "학습 요일 선택:",
+    ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"]
+)
 
-# 결과 출력 형식 선택
-output_type = st.sidebar.radio("결과 화면 형식 선택", ["표로 보기", "리스트로 보기"])
+hours_per_day = st.sidebar.slider("하루 공부 시간 (시간)", 1, 10, 3)
 
-# 버튼
-if st.sidebar.button("계획표 생성하기"):
-    # 날짜 생성
-    days = pd.date_range(start_date, end_date)
+study_style = st.sidebar.radio(
+    "학습 스타일을 선택하세요:",
+    ["집중형 (한 과목에 몰입)", "분산형 (여러 과목 조금씩)", "복습중심형 (짧은 복습 반복)"]
+)
 
-    # 과목 분배 (단순 반복 분배)
+output_format = st.sidebar.radio(
+    "결과 화면 형식:",
+    ["표 (Table)", "리스트 (List)", "캘린더형 (Calendar)"]
+)
+
+# -------------------------------
+# 📊 계획표 생성 함수
+# -------------------------------
+def generate_plan(subjects, days, hours, style):
     plan = []
-    idx = 0
+    if not subjects or not days:
+        return pd.DataFrame(columns=["요일", "시간", "과목", "학습 내용"])
+
     for d in days:
-        daily_subjects = []
-        for h in range(study_hours):
-            daily_subjects.append(subject_list[idx % len(subject_list)])
-            idx += 1
-        plan.append([d.date()] + daily_subjects)
+        if style == "집중형 (한 과목에 몰입)":
+            for h in range(1, hours+1):
+                plan.append([d, f"{h}시간차", subjects[h % len(subjects)], "집중 학습"])
+        elif style == "분산형 (여러 과목 조금씩)":
+            for h in range(1, hours+1):
+                plan.append([d, f"{h}시간차", subjects[(h-1) % len(subjects)], "분산 학습"])
+        elif style == "복습중심형 (짧은 복습 반복)":
+            for h in range(1, hours+1):
+                plan.append([d, f"{h}시간차", subjects[(h-1) % len(subjects)], "복습 및 점검"])
 
-    # DataFrame 생성
-    columns = ["날짜"] + [f"{i+1}교시" for i in range(study_hours)]
-    df = pd.DataFrame(plan, columns=columns)
+    return pd.DataFrame(plan, columns=["요일", "시간", "과목", "학습 내용"])
 
-    st.success("✅ 학습 계획표가 생성되었습니다!")
+# -------------------------------
+# 🚀 실행 버튼
+# -------------------------------
+if st.sidebar.button("✅ 학습 계획표 생성하기"):
+    df = generate_plan(subjects, days, hours_per_day, study_style)
 
-    # 결과 화면 선택
-    if output_type == "표로 보기":
-        st.dataframe(df)
+    if df.empty:
+        st.warning("⚠️ 과목과 요일을 선택해주세요!")
     else:
-        for i, row in df.iterrows():
-            st.markdown(f"### 📅 {row['날짜']}")
-            for j in range(1, study_hours + 1):
-                st.write(f"{j}교시: {row[j]}")
-            st.markdown("---")
+        st.success("✨ 학습 계획표가 생성되었습니다!")
 
-    # CSV 저장 버튼
-    csv = df.to_csv(index=False).encode("utf-8-sig")
-    st.download_button(
-        "📥 계획표 다운로드 (CSV)",
-        data=csv,
-        file_name="학습계획표.csv",
-        mime="text/csv",
-    )
+        # -------------------------------
+        # 🖼️ 출력 형식 선택
+        # -------------------------------
+        if output_format == "표 (Table)":
+            st.dataframe(df, use_container_width=True)
+        elif output_format == "리스트 (List)":
+            for i, row in df.iterrows():
+                st.write(f"📌 {row['요일']} | {row['시간']} → {row['과목']} ({row['학습 내용']})")
+        elif output_format == "캘린더형 (Calendar)":
+            st.markdown("### 🗓️ 주간 학습 캘린더")
+            pivot = df.pivot(index="시간", columns="요일", values="과목").fillna("")
+            st.table(pivot)
+
+        # -------------------------------
+        # 💾 다운로드 버튼
+        # -------------------------------
+        csv = df.to_csv(index=False).encode("utf-8-sig")
+        st.download_button(
+            "📥 CSV로 다운로드",
+            csv,
+            "학습계획표.csv",
+            "text/csv",
+            key="download-csv"
+        )
 
 
  
